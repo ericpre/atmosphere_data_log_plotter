@@ -14,6 +14,14 @@
 # <http://www.gnu.org/licenses/>.-
 """
 TODO:
+- open file outside local directory
+- test loading different files
+- read gas?
+- select a time zone using a combobox?
+
+- display loaded file
+- export button
+
 improvement of the layout:
 - add color to the label of the QCheckBox?
 - standardise the color of the plot
@@ -27,16 +35,19 @@ better date implementation in pyqtgraph?!
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
+import pytz, datetime
 from atmosphere_data_log_plotter.DateTimeAxisItem import DateTimeAxisItem
 
 def unix_time(dt):
-    import datetime
     epoch = datetime.datetime.utcfromtimestamp(0)
-    delta = dt - epoch
+    delta = dt.replace(tzinfo=None) - epoch
     return delta.total_seconds()
 
 def read_date_time_csv_atmosphere(fname):
-    import datetime
+    """
+    Return "naive" time read from the log file (depending on daylight saving
+    time and zone time)
+    """
     f = open(fname, 'r')
     f.readline()
     line1 = f.readline()
@@ -44,9 +55,16 @@ def read_date_time_csv_atmosphere(fname):
     line2 = f.readline()
     time = line2.split('Time (hh:mm:ss.ms) = ')[1].split(',')[0].split(':')  
     f.close()
-    datetime = datetime.datetime(int(date[0]), int(date[1]), int(date[2]),
-                                 int(time[0]), int(time[1]), int(time[2].split('.')[0]))
-    return datetime
+    dt = datetime.datetime(int(date[0]), int(date[1]), int(date[2]),
+                           int(time[0]), int(time[1]), int(time[2].split('.')[0]))
+    return dt
+
+def convert_datetime_to_utc(dt, timezone='Europe/London'):
+    """
+    Convert datetime to UTC considering daylight saving time and zone time
+    """
+    bst = pytz.timezone(timezone)
+    return bst.localize(dt).astimezone(pytz.utc)
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
@@ -89,10 +107,8 @@ class data_plotter_layout(pg.GraphicsLayoutWidget):
     def _load_data(self):
         # Open data
         self.fname = QtGui.QFileDialog.getOpenFileName(
-                     filter = self.tr(' Image File *.csv ;; *.*'))
-        fname='2014-12-15-contamination-test.csv'
-        fname='2015-04-26-PdCu.csv'
-        
+                     filter = self.tr(' Log File *.csv ;; *.*'))
+       
         # TODO
         # read comments that contains description
         # time is in millisecond, notes a str
@@ -104,7 +120,8 @@ class data_plotter_layout(pg.GraphicsLayoutWidget):
                                                         usecols=(0,2,3,4,5,6))
         print "Data loaded"
         self.time = self.time0/1000
-        self.starting_time_unix = unix_time(read_date_time_csv_atmosphere(fname))
+        starting_time_utc = convert_datetime_to_utc(read_date_time_csv_atmosphere(self.fname))
+        self.starting_time_unix = unix_time(starting_time_utc)
         self.actual_time = self.time0/1000 + self.starting_time_unix
         if hasattr(self, 'self.p1'):
             self._update_plots()
