@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Copyright 2015 Eric Prestat
 #
@@ -14,8 +15,6 @@
 # <http://www.gnu.org/licenses/>.-
 """
 TODO:
-- open file outside local directory
-- test loading different files
 - read gas?
 - select a time zone using a combobox?
 
@@ -31,12 +30,19 @@ There are a few bug:
 better date implementation in pyqtgraph?!
 - a supplementary axis is displayed on the plot (top left) using date axis
 """
+# Use PyQt QPI #2 with python 2.x
+import sip
+sip.setapi('QString', 2)
 
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 import pytz, datetime
-from atmosphere_data_log_plotter.DateTimeAxisItem import DateTimeAxisItem
+# Try relative import, if not global import
+try:
+    from DateTimeAxisItem import DateTimeAxisItem
+except ImportError:
+    from atmosphere_data_log_plotter.DateTimeAxisItem import DateTimeAxisItem
 
 def unix_time(dt):
     epoch = datetime.datetime.utcfromtimestamp(0)
@@ -123,7 +129,7 @@ class data_plotter_layout(pg.GraphicsLayoutWidget):
         starting_time_utc = convert_datetime_to_utc(read_date_time_csv_atmosphere(self.fname))
         self.starting_time_unix = unix_time(starting_time_utc)
         self.actual_time = self.time0/1000 + self.starting_time_unix
-        if hasattr(self, 'self.p1'):
+        if hasattr(self, 'p1'):
             self._update_plots()
         
     def _add_checkBox(self):
@@ -227,9 +233,9 @@ class data_plotter_layout(pg.GraphicsLayoutWidget):
         self.p2.sigXRangeChanged.connect(updateRegion)
         updatePlot()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  
     app = QtGui.QApplication([])
     win = MainWindow()
     win.resize(1200,800)
     win.show()
-
+    app.exec_()
