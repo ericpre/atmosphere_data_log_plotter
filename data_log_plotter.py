@@ -124,7 +124,7 @@ class data_plotter_layout(pg.GraphicsLayoutWidget):
                                                         skiprows=10,
                                                         unpack=True,
                                                         usecols=(0,2,3,4,5,6))
-        print "Data loaded"
+        print("Data loaded")
         self.time = self.time0/1000
         starting_time_utc = convert_datetime_to_utc(read_date_time_csv_atmosphere(self.fname))
         self.starting_time_unix = unix_time(starting_time_utc)

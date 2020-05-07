@@ -127,7 +127,7 @@ class DateTimeAxisItem(AxisItem):
             if spacing == lev[0] * lev[2]:
                 string, label1, label2 = self.formats[lev[3]]
         if string is None:
-            print "unknown spacing:", spacing
+            print("unknown spacing:"), spacing
             
         for x in values:
             try:
@@ -135,7 +135,7 @@ class DateTimeAxisItem(AxisItem):
                     sec = time.strftime('%S', time.localtime(x))
                     sec += ("%0.4f" % (x-int(x))).lstrip('0')
                     string = re.sub(r'%s', sec, string)
-                    print x, sec
+                    print(x, sec)
                 strns.append(time.strftime(string, time.localtime(x)))
                     
             except ValueError:  ## Windows can't handle dates before 1970
